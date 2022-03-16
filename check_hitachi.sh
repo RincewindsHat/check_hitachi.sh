@@ -1,122 +1,122 @@
-#!/bin/sh										
+#!/bin/sh
 
-# Verify that the Hitachi VSP Status check returns data. If not, return unknown to nagios.										
-# SNMP Setting needed.(Community -> common)										
+# Verify that the Hitachi VSP Status check returns data. If not, return unknown to nagios.
+# SNMP Setting needed.(Community -> common)
 
-# BASE MIB Info										
-BASEOID=.1.3.6.1.4.1.116									### VSP Base OID(MIB)	
-StorageExMibOID=$BASEOID.5.11									### SYSTEMOID : .1.3.6.1.4.1.116.5.11	
-raidExMibRootOID=$StorageExMibOID.4.1.1								### raidExMibRootOID : .1.3.6.1.4.1.116.5.11.4.1.1	
+# BASE MIB Info
+BASEOID=.1.3.6.1.4.1.116									### VSP Base OID(MIB)
+StorageExMibOID=$BASEOID.5.11									### SYSTEMOID : .1.3.6.1.4.1.116.5.11
+raidExMibRootOID=$StorageExMibOID.4.1.1								### raidExMibRootOID : .1.3.6.1.4.1.116.5.11.4.1.1
 
-### Machine Info										
-raidExMibNameOID=$raidExMibRootOID.1.0								### product name	
+### Machine Info
+raidExMibNameOID=$raidExMibRootOID.1.0								### product name
 
-### MIB info DKC 										
-raidExMibDkcCountOID=$raidExMibRootOID.4							### Number of DKC	
-raidExMibRaidListTableOID=$raidExMibRootOID.5							### List of DKC	
-raidExMibRaidListEntryOID=$raidExMibRootOID.5.1							### Entry of DKC List	
-raidlistSerialNumberOID=$raidExMibRootOID.5.1.1							### Serial Number	
-raidlistDKCMainVersionOID=$raidExMibRootOID.5.1.3						### MicroCode Version	
+### MIB info DKC
+raidExMibDkcCountOID=$raidExMibRootOID.4							### Number of DKC
+raidExMibRaidListTableOID=$raidExMibRootOID.5							### List of DKC
+raidExMibRaidListEntryOID=$raidExMibRootOID.5.1							### Entry of DKC List
+raidlistSerialNumberOID=$raidExMibRootOID.5.1.1							### Serial Number
+raidlistDKCMainVersionOID=$raidExMibRootOID.5.1.3						### MicroCode Version
 
-### MIB Info of the VSP DKC Component										
-### Status Info : 1=Normal, 2=Acute Failure, 3=Serious Failure, 4=Moderate Failure, 5=Service Failure										
+### MIB Info of the VSP DKC Component
+### Status Info : 1=Normal, 2=Acute Failure, 3=Serious Failure, 4=Moderate Failure, 5=Service Failure
 
-raidExMibDKCHWTable=$raidExMibRootOID.6								### Error Info of DKC	
-raidExMibDKCHWEntry=$raidExMibRootOID.6.1							### Entry of DKC Information	
-dkcHWProcessor=$raidExMibRootOID.6.1.2								### Status of processor	
-dkcHWCSW=$raidExMibRootOID.6.1.3								### Status of internal Star	
-dkcHWCache=$raidExMibRootOID.6.1.4								### Status of Cache	
-dkcHWPS=$raidExMibRootOID.6.1.6									### Status of Power Supply	
-dkcHWBattery=$raidExMibRootOID.6.1.7								### Status of Battery	
-dkcHWFan=$raidExMibRootOID.6.1.8								### Status of Fan	
+raidExMibDKCHWTable=$raidExMibRootOID.6								### Error Info of DKC
+raidExMibDKCHWEntry=$raidExMibRootOID.6.1							### Entry of DKC Information
+dkcHWProcessor=$raidExMibRootOID.6.1.2								### Status of processor
+dkcHWCSW=$raidExMibRootOID.6.1.3								### Status of internal Star
+dkcHWCache=$raidExMibRootOID.6.1.4								### Status of Cache
+dkcHWPS=$raidExMibRootOID.6.1.6									### Status of Power Supply
+dkcHWBattery=$raidExMibRootOID.6.1.7								### Status of Battery
+dkcHWFan=$raidExMibRootOID.6.1.8								### Status of Fan
 
-### MIB Info of the VSP DKU Component										
-### Status Info : 1=Normal, 2=Acute Failure, 3=Serious Failure, 4=Moderate Failure, 5=Service Failure										
+### MIB Info of the VSP DKU Component
+### Status Info : 1=Normal, 2=Acute Failure, 3=Serious Failure, 4=Moderate Failure, 5=Service Failure
 
-raidExMibDKUHWTable=$raidExMibRootOID.7			 					### Error Info of DKU	
-raidExMibDKUHWEntry=$raidExMibRootOID.7.1							### Entry of DKU Information	
-dkuHWPS=$raidExMibRootOID.7.1.2									### Status of Power Supply	
-dkuHWFan=$raidExMibRootOID.7.1.3								### Status of Fan	
-dkuHWDrive=$raidExMibRootOID.7.1.5								### Status of Drive	
+raidExMibDKUHWTable=$raidExMibRootOID.7			 					### Error Info of DKU
+raidExMibDKUHWEntry=$raidExMibRootOID.7.1							### Entry of DKU Information
+dkuHWPS=$raidExMibRootOID.7.1.2									### Status of Power Supply
+dkuHWFan=$raidExMibRootOID.7.1.3								### Status of Fan
+dkuHWDrive=$raidExMibRootOID.7.1.5								### Status of Drive
 
-# Get arguments										
+# Get arguments
 
-while getopts 'H:C:F:h' OPT; do										
-	case $OPT in										
-		H)  svphost=$OPTARG;;										
-		C)  snmpcommunity=$OPTARG;;										
-		h)  hlp="yes";;										
-		*)  unknown="yes";;										
-	esac										
-done										
+while getopts 'H:C:F:h' OPT; do
+	case $OPT in
+		H)  svphost=$OPTARG;;
+		C)  snmpcommunity=$OPTARG;;
+		h)  hlp="yes";;
+		*)  unknown="yes";;
+	esac
+done
 
-# Usage										
-HELP="										
-Check hardware health on Hitachi VSP with SNMP										
+# Usage
+HELP="
+Check hardware health on Hitachi VSP with SNMP
 
-usage: $0 [ -H value -C value -h ]										
+usage: $0 [ -H value -C value -h ]
 
-syntax:										
+syntax:
 
--H --> Host - SVP of Name or IP Address										
--C --> Community SNMP (default common)										
--h --> Print This Help Screen										
-"										
-if [ "$hlp" = "yes" -o $# -lt 1 ]; then										
-	echo "$HELP"										
-	exit 0										
-fi										
+-H --> Host - SVP of Name or IP Address
+-C --> Community SNMP (default common)
+-h --> Print This Help Screen
+"
+if [ "$hlp" = "yes" ] || [ $# -lt 1 ]; then
+	echo "$HELP"
+	exit 0
+fi
 
-if [ -z "$snmpcommunity" ]; then										
-	snmpcommunity="common"										
-fi										
+if [ -z "$snmpcommunity" ]; then
+	snmpcommunity="common"
+fi
 
-### funciotn with operational status selection										
+### funciotn with operational status selection
 
-function statuscase {										
+statuscase() {
 
-	statusNumber=`echo $1 | awk -F'(' '{printf $2}'`										
-	if [ "$statusNumber" != "" ]; then										
-		statusNumber=`echo $statusNumber |  awk -F')' '{printf $1}'`										
-	else										
-		statusNumber=$1										
-	fi										
-	case $statusNumber in										
-		1)										
-			exitstatus="NORMAL"										
-			mystatus=0										
-			;;										
-		2)										
-			exitstatus="Acute Failure"										
-			mystatus=2										
-			;;										
-		3)										
-			exitstatus="Serious Failure"										
-			mystatus=2										
-			;;										
-		4)										
-			exitstatus="Moderate Failure"										
-			mystatus=2										
-			;;										
-		5)										
-			exitstatus="Service Failure"										
-			mystatus=2										
-			;;										
-	esac										
-}										
+	statusNumber=$(echo "$1" | awk -F'(' '{printf $2}')
+	if [ "$statusNumber" != "" ]; then
+		statusNumber=$(echo "$statusNumber" |  awk -F')' '{printf $1}')
+	else
+		statusNumber=$1
+	fi
+	case $statusNumber in
+		1)
+			exitstatus="NORMAL"
+			mystatus=0
+			;;
+		2)
+			exitstatus="Acute Failure"
+			mystatus=2
+			;;
+		3)
+			exitstatus="Serious Failure"
+			mystatus=2
+			;;
+		4)
+			exitstatus="Moderate Failure"
+			mystatus=2
+			;;
+		5)
+			exitstatus="Service Failure"
+			mystatus=2
+			;;
+	esac
+}
 
-if [ -n "$svphost" ]; then										
+if [ -n "$svphost" ]; then
 
-	result=`snmpwalk -v 1 -c $snmpcommunity -On $svphost .1.3.6.1.4.1.116.5.11.4.1.1.1`										
+	result=$(snmpwalk -v 1 -c "$snmpcommunity" -On "$svphost" .1.3.6.1.4.1.116.5.11.4.1.1.1)
 
-	if [ -n "$result" -a "$result" != "End of MIB" ]; then
+	if [ -n "$result" ] && [ "$result" != "End of MIB" ]; then
 
-####### Check the chassis Info(S/N, Mcode Info)										
+####### Check the chassis Info(S/N, Mcode Info)
 
 myexitcode=0
-info_model=`snmpwalk -v 1 -c $snmpcommunity -On $svphost .1.3.6.1.4.1.116.5.11.4.1.1.5.1.2 | awk -F'STRING: ' '{printf $2}' | sed -e 's|["]||g'`
-info_sn=`snmpwalk -v 1 -c $snmpcommunity -On $svphost .1.3.6.1.4.1.116.5.11.4.1.1.5.1 | awk -F'INTEGER: ' '{printf $2}'`
-info_mcode=`snmpwalk -v 1 -c $snmpcommunity -On $svphost .1.3.6.1.4.1.116.5.11.4.1.1.5.1.3 | awk -F'STRING: ' '{printf $2}'`
+info_model=$(snmpwalk -v 1 -c "$snmpcommunity" -On "$svphost" .1.3.6.1.4.1.116.5.11.4.1.1.5.1.2 | awk -F'STRING: ' '{printf $2}' | sed -e 's|["]||g')
+info_sn=$(snmpwalk -v 1 -c "$snmpcommunity" -On "$svphost" .1.3.6.1.4.1.116.5.11.4.1.1.5.1 | awk -F'INTEGER: ' '{printf $2}')
+info_mcode=$(snmpwalk -v 1 -c "$snmpcommunity" -On "$svphost" .1.3.6.1.4.1.116.5.11.4.1.1.5.1.3 | awk -F'STRING: ' '{printf $2}')
 case "$info_model" in
 	RAID400)
 		info_model="Lightning 9900";;
@@ -130,15 +130,15 @@ case "$info_model" in
 esac
 chassisDescStatus="[Model : $info_model, S/N : $info_sn, Mcode info : $info_mcode]"
 
-pluginoutput="$chassisDescStatus \n"	
+pluginoutput="$chassisDescStatus \n"
 
 ####### Check Status of DKC
 
 	## 1) Check the DKC Processor
 
 	mydevice="DKC_HW_PROCESSOR"
-	devicestatus=`snmpwalk -v 1 -c $snmpcommunity -On $svphost $dkcHWProcessor | awk -F'INTEGER: ' '{printf $2}'`
-	statuscase $devicestatus
+	devicestatus=$(snmpwalk -v 1 -c "$snmpcommunity" -On "$svphost" "$dkcHWProcessor" | awk -F'INTEGER: ' '{printf $2}')
+	statuscase "$devicestatus"
 
 	if [ "$mystatus" =  "0" ]; then
 		pluginoutput="$pluginoutput OK - Status is $exitstatus [$mydevice] \n"
@@ -150,8 +150,8 @@ pluginoutput="$chassisDescStatus \n"
 	## 2) Check the Cache
 
 	mydevice="DKC_HW_CACHE"
-	devicestatus=`snmpwalk -v 1 -c $snmpcommunity -On $svphost $dkcHWCache | awk -F'INTEGER: ' '{printf $2}'`
-	statuscase $devicestatus
+	devicestatus=$(snmpwalk -v 1 -c "$snmpcommunity" -On "$svphost" "$dkcHWCache" | awk -F'INTEGER: ' '{printf $2}')
+	statuscase "$devicestatus"
 
 	if [ "$mystatus" =  "0" ]; then
 		pluginoutput="$pluginoutput OK - Status is $exitstatus [$mydevice] \n"
@@ -163,8 +163,8 @@ pluginoutput="$chassisDescStatus \n"
 	## 3) Check the PowerSupply
 
 	mydevice="DKC_HW_POWERSUPPLY"
-	devicestatus=`snmpwalk -v 1 -c $snmpcommunity -On $svphost $dkcHWPS | awk -F'INTEGER: ' '{printf $2}'`
-	statuscase $devicestatus
+	devicestatus=$(snmpwalk -v 1 -c "$snmpcommunity" -On "$svphost" "$dkcHWPS" | awk -F'INTEGER: ' '{printf $2}')
+	statuscase "$devicestatus"
 
 	if [ "$mystatus" =  "0" ]; then
 		pluginoutput="$pluginoutput OK - Status is $exitstatus [$mydevice] \n"
@@ -176,8 +176,8 @@ pluginoutput="$chassisDescStatus \n"
 	## 4) Check the Battery
 
 	mydevice="DKC_HW_BATTERY"
-	devicestatus=`snmpwalk -v 1 -c $snmpcommunity -On $svphost $dkcHWBattery | awk -F'INTEGER: ' '{printf $2}'`
-	statuscase $devicestatus
+	devicestatus=$(snmpwalk -v 1 -c "$snmpcommunity" -On "$svphost" "$dkcHWBattery" | awk -F'INTEGER: ' '{printf $2}')
+	statuscase "$devicestatus"
 
 	if [ "$mystatus" =  "0" ]; then
 		pluginoutput="$pluginoutput OK - Status is $exitstatus [$mydevice] \n"
@@ -186,11 +186,11 @@ pluginoutput="$chassisDescStatus \n"
 		myexitcode=2
 	fi
 
-	## 5) Check the FAN 
+	## 5) Check the FAN
 
 	mydevice="DKC_HW_FAN"
-	devicestatus=`snmpwalk -v 1 -c $snmpcommunity -On $svphost $dkcHWFan | awk -F'INTEGER: ' '{printf $2}'`
-	statuscase $devicestatus
+	devicestatus=$(snmpwalk -v 1 -c "$snmpcommunity" -On "$svphost" "$dkcHWFan" | awk -F'INTEGER: ' '{printf $2}')
+	statuscase "$devicestatus"
 
 	if [ "$mystatus" =  "0" ]; then
 		pluginoutput="$pluginoutput OK - Status is $exitstatus [$mydevice] \n"
@@ -204,8 +204,8 @@ pluginoutput="$chassisDescStatus \n"
 		## 6) Check the DKU POWERSUPPLY
 
 		mydevice="DKU_HW_POWERSUPPLY"
-		devicestatus=`snmpwalk -v 1 -c $snmpcommunity -On $svphost $dkuHWPS | awk -F'INTEGER: ' '{printf $2}'`
-		statuscase $devicestatus
+		devicestatus=$(snmpwalk -v 1 -c "$snmpcommunity" -On "$svphost" "$dkuHWPS" | awk -F'INTEGER: ' '{printf $2}')
+		statuscase "$devicestatus"
 
 		if [ "$mystatus" =  "0" ]; then
 			pluginoutput="$pluginoutput OK - Status is $exitstatus [$mydevice] \n"
@@ -217,8 +217,8 @@ pluginoutput="$chassisDescStatus \n"
 		## 7) Check the FAN
 
 		mydevice="DKU_HW_FAN"
-		devicestatus=`snmpwalk -v 1 -c $snmpcommunity -On $svphost $dkuHWFan | awk -F'INTEGER: ' '{printf $2}'`
-		statuscase $devicestatus
+		devicestatus=$(snmpwalk -v 1 -c "$snmpcommunity" -On "$svphost" "$dkuHWFan" | awk -F'INTEGER: ' '{printf $2}')
+		statuscase "$devicestatus"
 
 		if [ "$mystatus" =  "0" ]; then
 			pluginoutput="$pluginoutput OK - Status is $exitstatus [$mydevice] \n"
@@ -230,32 +230,32 @@ pluginoutput="$chassisDescStatus \n"
 		## 8) Check the Drive
 
 		mydevice="DKU_HW_Drive"
-		devicestatus=`snmpwalk -v 1 -c $snmpcommunity -On $svphost $dkuHWDrive | awk -F'INTEGER: ' '{printf $2}'`
-		statuscase $devicestatus
+		devicestatus=$(snmpwalk -v 1 -c "$snmpcommunity" -On "$svphost" "$dkuHWDrive" | awk -F'INTEGER: ' '{printf $2}')
+		statuscase "$devicestatus"
 
 		if [ "$mystatus" =  "0" ]; then
 			pluginoutput="$pluginoutput OK - Status is $exitstatus [$mydevice] \n"
 		else
 			pluginoutput="$pluginoutput CRITICAL - Status is $exitstatus [$mydevice] \n"
 			myexitcode=2
-		fi					
+		fi
 
-####### END										
+####### END
 
-if [ "$myexitcode" =  "0" ]; then										
-	echo -ne "OK - "										
-else										
-	echo -ne "CRITICAL - "										
-fi										
-echo -ne "$pluginoutput"										
-exit $myexitcode										
+if [ "$myexitcode" =  "0" ]; then
+	echo -ne "OK - "
+else
+	echo -ne "CRITICAL - "
+fi
+echo -ne "$pluginoutput"
+exit $myexitcode
 
-else										
-	echo -ne "Critical - Problem with connection SNMP on device. \n"										
-	exit 2										
-	fi										
-else										
-	echo -ne "SCRIPT ERROR - You must define the host. \n"										
-	exit 3										
-fi										
+else
+	echo -ne "Critical - Problem with connection SNMP on device. \n"
+	exit 2
+	fi
+else
+	echo -ne "SCRIPT ERROR - You must define the host. \n"
+	exit 3
+fi
 exit
